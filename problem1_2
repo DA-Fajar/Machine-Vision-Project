@@ -1,0 +1,28 @@
+% Read image
+image = imread('D:\MATLAB R2023b\HELLO.jpg');
+
+% Clockwise rotation angle
+angle = 3;
+
+% Rotate using different methods
+rotated_image_nearest = imrotate(image, angle, 'nearest');
+rotated_image_bilinear = imrotate(image, angle, 'bilinear');
+rotated_image_bicubic = imrotate(image, angle, 'bicubic'); 
+
+% Show rotation results
+figure;
+subplot(2, 2, 1);
+imshow(image);
+title('origin');
+ 
+subplot(2, 2, 2);
+imshow(rotated_image_nearest);
+title('nearest-neighborhood interpolation');
+ 
+subplot(2, 2, 3);
+imshow(rotated_image_bilinear);
+title('bilinear interpolation');
+ 
+subplot(2, 2, 4);
+imshow(rotated_image_bicubic);
+title('bicubic interpolation');
