@@ -1,0 +1,20 @@
+% Read image
+Image = imread('D:\MATLAB R2023b\HELLO.jpg');
+
+% Setting the mean value filter
+H3 = fspecial('average',[3,3]);
+H5 = fspecial('average',[5,5]);
+H7 = fspecial('average',[7,7]);
+H9 = fspecial('average',[9,9]);
+
+% Processing of images using filtering
+r3 = imfilter(Image,H3);
+r5 = imfilter(Image,H5);
+r7 = imfilter(Image,H7);
+r9 = imfilter(Image,H9);
+
+% Show results
+subplot(2,3,1);imshow(Image);title('origin');
+subplot(2,3,2);imshow(r3);title('3*3');
+subplot(2,3,3);imshow(r5);title('5*5');
+subplot(2,3,4);imshow(r7);title('7*7');
