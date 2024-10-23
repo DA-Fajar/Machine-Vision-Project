@@ -167,7 +167,7 @@ u=-M/2:(M/2-1);
 v=-N/2:(N/2-1);
 [U,V]=meshgrid(u,v);%The effect of meshgrid(u,v) is to produce two matrices of the same size with vector u as rows and vector v as splits, respectively
 D=sqrt(U.^2+V.^2);%Set the distance between the frequency point (U,V) and the center of the frequency domain as D(U,V)
-D0=40;             %cut-off frequency
+D0=110;             %cut-off frequency
 H=double(D>D0);    %Ideal High Pass Filter
 J=fftshift(fft2(I,size(H,1),size(H,2))); %Convert time domain image to frequency domain image by Fourier transform and move to the center
 K=J.*H;                         %filter processing
@@ -190,7 +190,7 @@ BW = imbinarize(L);
 %BW = ~BW; 
 
 % Cleaning up small areas and noise
-BW_clean = bwareaopen(BW, 100);% Remove noise less than 50 pixels
+BW_clean = bwareaopen(BW, 50);% Remove noise less than 50 pixels
 figure;
 imshow(BW_clean);
 title('Binary image after denoising');
