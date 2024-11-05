@@ -200,19 +200,19 @@ function [out1, out2] = butterworth_hpf(I, Dh, n)
     out2 = ifft2(ifftshift(I_ffted_shifted_filtered));
 end
 
-Dh = 20; % threshold
+Dh = 40; % threshold
 n = 1; % hpf order
-[J, butter] = butterworth_hpf(r3, Dh, n);
+[J, butter] = butterworth_hpf(r7, Dh, n);
 
 
 figure;
 %subplot(131),imshow(J);
-subplot(2,4,1),imshow(r5),title("5x5Filtered-Rotated Image");
-subplot(2,4,2),imshow(J),title("High-Pass Filter Applied");
-subplot(2,4,3),imhist(r5),title("Histogram of Rotated Image");
-subplot(2,4,4),imhist(J),title("Histogram after High-Pass Filter")
-subplot(2,4,5),imshow(r5),title("5x5Filtered-Rotated Image");
-subplot(2,4,6),imshow(J),title("High-Pass Filter Applied");
+subplot(2,3,1),imshow(r5),title("5x5Filtered-Rotated Image");
+subplot(2,3,2),imshow(J),title("High-Pass Filter Applied");
+subplot(2,3,3),imshow(butter),title("5x5Filtered-Rotated Image");
+subplot(2,3,4),imhist(r5),title("Histogram of Rotated Image");
+subplot(2,3,5),imhist(J),title("Histogram after High-Pass Filter")
+subplot(2,3,6),imhist(butter),title("High-Pass Filter Applied");
 
 
 %-----------------
@@ -220,12 +220,13 @@ subplot(2,4,6),imshow(J),title("High-Pass Filter Applied");
 %----------------- 
 
 % binarized image
-%T = adaptthresh(L, 0.9); % Adjust the sensitivity as needed
+T = adaptthresh(butter, 0.5); % Adjust the sensitivity as needed
 BW = imbinarize(butter);
-%BW = ~BW; 
+BW = ~BW; 
+% binarized 
 
 % Cleaning up small areas and noise
-BW_clean = bwareaopen(BW, 50);% Remove noise less than 50 pixels
+BW_clean = bwareaopen(BW, 10000);% Remove noise less than 10000 pixels
 figure;
 imshow(BW_clean);
 title('Binary image after denoising');
@@ -250,7 +251,7 @@ disp(results.Text);
 
 for k = 1:num
     % Get the bounding box for each character
-    [r, c] = find(L == k);
+    [r, c] = find(Clean == k);
     boundingBox = [min(c), min(r), max(c)-min(c)+1, max(r)-min(r)+1];
     
     % Mark character numbers on the image

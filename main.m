@@ -221,11 +221,12 @@ subplot(2,3,6),imhist(butter),title("High-Pass Filter Applied");
 
 % binarized image
 T = adaptthresh(butter, 0.9); % Adjust the sensitivity as needed
-BW = imbinarize(butter,T);
+BW = imbinarize(butter);
 BW = ~BW; 
+% binarized 
 
 % Cleaning up small areas and noise
-BW_clean = bwareaopen(BW, 50);% Remove noise less than 50 pixels
+BW_clean = bwareaopen(BW, 10000);% Remove noise less than 10000 pixels
 figure;
 imshow(BW_clean);
 title('Binary image after denoising');
@@ -250,7 +251,7 @@ disp(results.Text);
 
 for k = 1:num
     % Get the bounding box for each character
-    [r, c] = find(L == k);
+    [r, c] = find(Clean == k);
     boundingBox = [min(c), min(r), max(c)-min(c)+1, max(r)-min(r)+1];
     
     % Mark character numbers on the image
