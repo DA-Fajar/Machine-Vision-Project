@@ -166,7 +166,16 @@ function out = ifftshow(f)
     out = f1/fm;
 end
 
-function k = butter_hp_kernel(I, Dh, n) 
+function out = butter_hp_f(u, v, Dh, n)
+    uv = u.^2+v.^2;
+    Duv = sqrt(uv);
+    frac = Dh./Duv;
+    %denom = frac.^(2*n);
+    A=0.414; denom = A.*(frac.^(2*n));    
+    out = 1./(1.+denom);
+end
+
+function out = butter_hp_kernel(I, Dh, n) 
     Height = size(I,1); 
     Width = size(I,2); 
 
@@ -175,16 +184,7 @@ function k = butter_hp_kernel(I, Dh, n)
                     -floor(Height/2): floor(Height-1)/2 ...
                  ); 
 
-    k = butter_hp_f(u, v, Dh, n);
-end
-
-function f = butter_hp_f(u, v, Dh, n)
-    uv = u.^2+v.^2;
-    Duv = sqrt(uv);
-    frac = Dh./Duv;
-    %denom = frac.^(2*n);
-    A=0.414; denom = A.*(frac.^(2*n));    
-    f = 1./(1.+denom);
+    out = butter_hp_f(u, v, Dh, n);
 end
 
 function [out1, out2] = butterworth_hpf(I, Dh, n)
@@ -223,7 +223,7 @@ subplot(2,3,6),imhist(butter),title("High-Pass Filter Applied");
 T = adaptthresh(butter, 0.9); % Adjust the sensitivity as needed
 BW = imbinarize(butter);
 BW = ~BW; 
-% binarized 
+% binarized.
 
 % Cleaning up small areas and noise
 BW_clean = bwareaopen(BW, 10000);% Remove noise less than 10000 pixels
@@ -236,13 +236,6 @@ title('Binary image after denoising');
 figure;
 imshow(label2rgb(Clean));% Displays each connectivity field in a different color
 title('Character segmentation results');
-
-% Extract each character and mark it
-for k = 1:num
-     % Get the bounding box for each character
-    [r, c] = find(Clean == k); % Get the pixel point of the current character
-    boundingBox = [min(c), min(r), max(c)-min(c)+1, max(r)-min(r)+1];% Determining the bounding box
-end
 
 % Character Recognition with OCR
 results = ocr(BW_clean); % Recognizing Characters Using MATLAB's Built-in OCR Functions
@@ -259,3 +252,28 @@ for k = 1:num
 end
 title('Marked Characters');
 
+
+Final = zeros(size(Clean,1),size(Clean,2));
+for i = 1:size(Clean,1) % row
+    for j = 1:size(Clean,2) % col
+        if ismember(Clean(i,j),[3,6,7,8,9,11,12]) % choose the connected groups that is desired
+            Final(i,j) = Clean(i,j);
+        else 
+            Final(i,j) = 0;
+        end
+    end
+end
+
+figure;
+imshow(label2rgb(Final));% Displays each connectivity field in a different color
+title('Character segmentation results 2');
+
+for k = 1:length(unique(Final))
+    % Get the bounding box for each character
+    [r, c] = find(Final == k);
+    boundingBox = [min(c), min(r), max(c)-min(c)+1, max(r)-min(r)+1];
+    
+    % Mark character numbers on the image
+    text(boundingBox(1), boundingBox(2)-10, num2str(k), 'Color', 'red', 'FontSize', 12, 'FontWeight', 'bold');
+end
+title('Marked Characters 2');
