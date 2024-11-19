@@ -8,7 +8,7 @@ imageData = imageDatastore(dataFolder, 'IncludeSubfolders', true, 'LabelSource',
 
 % Step 2: Resize Images to Consistent Size (e.g., 64x64)
 inputSize = [100, 100];
-cellSize = [15, 15];
+cellSize = [16, 16];
 hogFeatureSize = length(extractHOGFeatures(ones(inputSize), 'CellSize', cellSize));
 numImages = numel(imageData.Files);
 features = zeros(numImages, hogFeatureSize, 'single');
