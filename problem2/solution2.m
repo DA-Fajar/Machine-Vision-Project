@@ -6,13 +6,34 @@ clear all;
 dataFolder = './datasets/p_dataset_26';
 imageData = imageDatastore(dataFolder, 'IncludeSubfolders', true, 'LabelSource', 'foldernames');
 
-% Step 2: Resize Images to Consistent Size (e.g., 64x64)
+% Step 2: Resize Images to Consistent Size 
 inputSize = [64, 64];
-cellSize = [8, 8];
+cellSize = [16, 16];
 hogFeatureSize = length(extractHOGFeatures(ones(inputSize), 'CellSize', cellSize));
 numImages = numel(imageData.Files);
 features = zeros(numImages, hogFeatureSize, 'single');
 labels = imageData.Labels;
+
+img = readimage(imageData,1200);  %just to check the how the cell size change with the hog feature extraction result 
+[hog_8x8, vis8x8] = extractHOGFeatures(img,'CellSize',[8 8]);
+[hog_16x16, vis16x16] = extractHOGFeatures(img,'CellSize',[16 16]);
+[hog_32x32, vis32x32] = extractHOGFeatures(img,'CellSize',[32 32]);
+figure(12);
+subplot(2,2,1); 
+imshow(img);
+title('Input Image');
+
+subplot(2,2,2);
+plot(vis8x8);
+title({'CellSize = [8 8]'; ['Length = ' num2str(length(hog_8x8))]});
+
+subplot(2,2,3);
+plot(vis16x16);
+title({'CellSize = [16 16]'; ['Length = ' num2str(length(hog_16x16))]});
+
+subplot(2,2,4);
+plot(vis32x32);
+title({'CellSize = [32 32]'; ['Length = ' num2str(length(hog_32x32))]});
 
 % Extract HOG features from each image in the dataset
 for i = 1:numImages
@@ -33,24 +54,46 @@ testLabels = labels(testIdx);
 [trainFeatures, mu, sigma] = zscore(trainFeatures);
 testFeatures = (testFeatures - mu) ./ sigma;
 
-% Step 5: Train an SVM Model
-SVMModel = fitcecoc(trainFeatures, trainLabels, 'Learners', 'svm', 'Coding', 'onevsall');
+% Step 5: Train an SVM Model with Optimal Parameters
+% Define the optimal parameters
+optimalKernelFunction = 'linear';
+optimalBoxConstraint = 0.1;
+optimalKernelScale = 0.1;
 
-% Step 6: Test the Classifier
-predictedLabels = predict(SVMModel, testFeatures);
-accuracy = sum(predictedLabels == testLabels) / numel(testLabels);
-fprintf('Classification Accuracy: %.2f%%\n', accuracy * 100);
+% Create the SVM template with optimal parameters
+svmTemplate = templateSVM('KernelFunction', optimalKernelFunction, ...
+                          'BoxConstraint', optimalBoxConstraint, ...
+                          'KernelScale', optimalKernelScale);
 
-% Step 7: Display Confusion Matrix
-figure;
-confusionchart(testLabels, predictedLabels);
-title('Confusion Matrix for Character Classification');
+% Train the ECOC model using the SVM template
+SVMModel = fitcecoc(trainFeatures, trainLabels, 'Learners', svmTemplate, 'Coding', 'onevsall');
 
-% % Close the figure after displaying the confusion matrix
-% pause(2); % Pause to allow viewing of the confusion matrix before it closes
-% close(gcf); % Close the confusion matrix figure
+% Check if the model is already saved
+if isfile('SVMModel.mat')
+    % Load the saved model
+    load('SVMModel.mat');
+    disp('Loaded saved model from SVMModel.mat');
+else
+    % Train the model if no saved model exists
+    svmTemplate = templateSVM('KernelFunction', 'linear', 'BoxConstraint', 0.1, 'KernelScale', 0.1);
+    SVMModel = fitcecoc(trainFeatures, trainLabels, 'Learners', svmTemplate, 'Coding', 'onevsall');
+    save('SVMModel.mat', 'SVMModel');
+    disp('Model trained and saved to SVMModel.mat');
+
+    
+    % Step 6: Test the Classifier
+    predictedLabels = predict(SVMModel, testFeatures);
+    accuracy = sum(predictedLabels == testLabels) / numel(testLabels);
+    fprintf('Classification Accuracy: %.2f%%\n', accuracy * 100);
+
+    % Step 7: Display Confusion Matrix
+    figure;
+    confusionchart(testLabels, predictedLabels);
+    title('Confusion Matrix for Character Classification');
+end
+
+
 %% 
-
 % Step 8: Load and Process the Original Image for Character Recognition
 Image = imread('./datasets/hello_world.jpg');
 
@@ -61,7 +104,7 @@ subImage = imcrop(Image, [8, 99, size(Image,2)/2, 70]); % Replace with actual va
 grayImage = rgb2gray(subImage);
 
 % Apply adaptive thresholding to create a binary image
-binaryImage = imbinarize(grayImage, 'adaptive', 'Sensitivity', 0.32); % Adjust sensitivity if necessary
+binaryImage = imbinarize(grayImage, 'adaptive', 'Sensitivity', 0.36); % Adjust sensitivity if necessary
 
 % Create a one-pixel-thin version of the characters
 outlineImage = bwmorph(binaryImage, 'remove');
@@ -111,3 +154,6 @@ end
 
 % Display the recognized text in console
 fprintf('Recognized Text: %s\n', recognizedText);
+
+
+
